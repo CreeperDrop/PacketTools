@@ -37,10 +37,13 @@
 //        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 //        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 //        0x00, 0x00, 0x00, 0x00};
+void modPacketMACSource(char* RawPacket, char* modification);
+void modPacketMACDest(char* RawPacket, char* modification);
+void modPacketPayload(char* RawPacket, char* modification, char from);
 
 int main(){
 
-    unsigned char RawData_Ping[] = {
+    char RawData_Ping[] = {
     /*---- wlan header start -----*/
     0, /* version , type sub type */
     1, /* Frame control flag */
@@ -80,12 +83,36 @@ int main(){
     int packetLength = sizeof(RawData_Ping); //each element is 1 byte
 
     printf("packet has %i elements \n", packetLength);
+    char payloadMod[] = {0xAA, 0xBB, 0xCC, 0xDD};
+    modPacketPayload(RawData_Ping, payloadMod, 54);
+    printf("PAYLOAD = %02x, %02x, %02x, %02x, %02x \n", RawData_Ping[54], RawData_Ping[55], RawData_Ping[56], RawData_Ping[57], RawData_Ping[58]);
+    return 0;
 
     /* PRINT ASCII TABLE
     int i;
     for (i = 0; i < 128; i++)
         printf("%i is %c \n", i, RawData_Ping[i]);
     */
-   return 0;
+   
+}
 
+// modification has to be 5 bytes (elements) long
+void modPacketMACSource(char* RawPacket, char* modification){
+    for (char i = 0; i < 6; i++){
+        RawPacket[16 + i] = modification[i];
+    }
+}
+
+// modification has to be 5 bytes (elements) long
+void modPacketMACDest(char* RawPacket, char* modification){
+    for (char i = 0; i < 6; i++){
+        RawPacket[4 + i] = modification[i];
+    }
+}
+
+// This function figures out how long the modification is to the payload.
+void modPacketPayload(char* RawPacket, char* modification, char from){
+    for (char i = 0; i < sizeof(modification); i++){
+        RawPacket[from + i] = modification[i];
+    }
 }
