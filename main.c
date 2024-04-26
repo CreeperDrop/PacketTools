@@ -40,6 +40,10 @@
 void modPacketMACSource(char* RawPacket, char* modification);
 void modPacketMACDest(char* RawPacket, char* modification);
 void modPacketPayload(char* RawPacket, char* modification, char from);
+void extractMACSource(char* RawPacket, char* MACSource);
+void extractMACDest(char* RawPacket, char* MACDest);
+void extractPayload(char* RawPacket, char* payLoad);
+void extractFromTo(char* RawPacket, char* extraction, unsigned char from, unsigned char to);
 
 int main(){
 
@@ -83,9 +87,37 @@ int main(){
     int packetLength = sizeof(RawData_Ping); //each element is 1 byte
 
     printf("packet has %i elements \n", packetLength);
-    char payloadMod[] = {0xAA, 0xBB, 0xCC, 0xDD};
-    modPacketPayload(RawData_Ping, payloadMod, 54);
-    printf("PAYLOAD = %02x, %02x, %02x, %02x, %02x \n", RawData_Ping[54], RawData_Ping[55], RawData_Ping[56], RawData_Ping[57], RawData_Ping[58]);
+
+    // Payload mod test
+    // char payloadMod[] = {0xAA, 0xBB, 0xCC, 0xDD};
+    // modPacketPayload(RawData_Ping, payloadMod, 54);
+    // printf("PAYLOAD = %02x, %02x, %02x, %02x, %02x \n", RawData_Ping[54],
+    //      RawData_Ping[55], RawData_Ping[56], RawData_Ping[57], RawData_Ping[58]);
+
+    char source[6];
+    char dest[6];
+    unsigned char payLoad[201];
+    unsigned char extraction[256];
+
+    unsigned char from = 0, to = 255;
+
+    extractMACSource(RawData_Ping, source);
+    extractMACDest(RawData_Ping, dest);
+    extractPayload(RawData_Ping, payLoad);
+    extractFromTo(RawData_Ping, extraction, from, to);
+
+    unsigned char i;
+    for (i = 0; i < 6; i++)
+        printf("source[%i] = %i \n", i, source[i]);
+
+    for (i = 0; i < 6; i++)
+        printf("dest[%i] = %i \n", i, dest[i]);
+
+    for (i = 0; i < 202; i++)
+        printf("payLoad[%i] = %i \n", i, payLoad[i]);
+
+    for (i = 0; i < to - from + 1; i++)
+        printf("extraction[%i] = %i \n", i, extraction[i]);
     return 0;
 
     /* PRINT ASCII TABLE
@@ -98,21 +130,60 @@ int main(){
 
 // modification has to be 5 bytes (elements) long
 void modPacketMACSource(char* RawPacket, char* modification){
-    for (char i = 0; i < 6; i++){
+    unsigned char i;
+    for (i = 0; i <= 5; i++){
         RawPacket[16 + i] = modification[i];
     }
 }
 
 // modification has to be 5 bytes (elements) long
 void modPacketMACDest(char* RawPacket, char* modification){
-    for (char i = 0; i < 6; i++){
+    unsigned char i;
+    for (i = 0; i <= 5; i++){
         RawPacket[4 + i] = modification[i];
     }
 }
 
 // This function figures out how long the modification is to the payload.
 void modPacketPayload(char* RawPacket, char* modification, char from){
+    unsigned char i;
     for (char i = 0; i < sizeof(modification); i++){
         RawPacket[from + i] = modification[i];
     }
 }
+
+void extractMACSource(char* RawPacket, char* MACSource){
+    unsigned char i;
+
+    for(i = 0; i <= 5; i++){
+        MACSource[i] = RawPacket[16 + i];
+    }
+    
+}
+
+void extractMACDest(char* RawPacket, char* MACDest){
+    unsigned char i;
+
+    for(i = 0; i <= 5; i++){
+        MACDest[i] = RawPacket[4 + i];
+    }
+}
+
+void extractPayload(char* RawPacket, char* payLoad){
+    unsigned char i;
+
+    for(i = 0; i <= 201; i++){
+        payLoad[i] = RawPacket[54 + i];
+    }
+
+}
+
+// Use indices of where you want to extract
+void extractFromTo(char* RawPacket, char* extraction, unsigned char from, unsigned char to){
+    unsigned char i;
+
+    for(i = 0; i <= to - from; i++){
+        extraction[i] = RawPacket[from + i];
+    }
+}
+
